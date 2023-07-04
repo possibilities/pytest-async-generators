@@ -32,11 +32,11 @@ jobs:
 
     - name: Lint code
       run: |
-        poetry run flake8 petstore tests
+        poetry run flake8 pytest_async_generators tests
 
     - name: Check types
       run: |
-        poetry run mypy petstore tests
+        poetry run mypy pytest_async_generators tests
 
     - name: Run tests
       run: |

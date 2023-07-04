@@ -1,3 +1,0 @@
-[run]
-omit =
-    petstore/database/database.py
