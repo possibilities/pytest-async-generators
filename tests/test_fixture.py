@@ -1,4 +1,3 @@
-import time
 import asyncio
 import pytest
 from typing import Any, AsyncGenerator, Callable
@@ -12,16 +11,8 @@ class EventBusWithAsyncGenerator:
         await self.queue.put(event)
 
     async def to_async_generator(self) -> AsyncGenerator[Any, None]:
-        start_time = time.time()
-        yield await self.queue.get()
-
-        first_event_elapsed_time = time.time() - start_time
-        timeout = first_event_elapsed_time * 1.25
         while True:
-            try:
-                yield await asyncio.wait_for(self.queue.get(), timeout=timeout)
-            except asyncio.TimeoutError:
-                break
+            yield await self.queue.get()
 
 
 @pytest.mark.asyncio
