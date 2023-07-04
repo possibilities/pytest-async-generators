@@ -10,7 +10,7 @@ class Count:
     count: int
 
 
-def get_count(root) -> Count:
+def get_count() -> Count:
     return Count(count=222)
 
 
@@ -24,8 +24,8 @@ class Subscription:
     @strawberry.subscription
     async def count(self, target: int = 100) -> typing.AsyncGenerator[int, None]:
         for i in range(target):
+            await asyncio.sleep(0.3)
             yield i
-            await asyncio.sleep(0.5)
 
 
 def create_app() -> web.Application:

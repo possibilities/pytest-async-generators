@@ -1,31 +1,72 @@
+import time
 import asyncio
+import pytest
 import pytest_asyncio
 from dataclasses import dataclass
-from typing import List, Any, AsyncGenerator, Coroutine, Callable
+import typing
+from aiohttp.test_utils import TestServer
+from pytest_async_generators.app import create_app
+from gql import gql, Client
+from gql.transport.websockets import WebsocketsTransport
+from graphql.language.ast import DocumentNode
+
+
+@pytest_asyncio.fixture
+async def server(
+    aiohttp_server: typing.Callable[..., typing.Awaitable[TestServer]],
+) -> TestServer:
+    return await aiohttp_server(create_app())
+
+
+@pytest_asyncio.fixture
+async def websocket_transport(
+    server: TestServer,
+) -> typing.AsyncGenerator[WebsocketsTransport, None]:
+    transport = WebsocketsTransport(
+        url=f"ws://localhost:{server.port}/graphql", close_timeout=0.1
+    )
+    yield transport
+    await transport.close()
+
+
+@pytest.fixture
+def subscription_client(websocket_transport: WebsocketsTransport) -> typing.Callable:
+    def _subscription_client(query_string: str) -> typing.AsyncGenerator:
+        query = gql(query_string)
+        client = Client(
+            transport=websocket_transport, fetch_schema_from_transport=False
+        )
+        return client.subscribe_async(query)
+
+    return _subscription_client
 
 
 @dataclass
 class AsyncGeneratorSubscriber:
-    wait_for_messages: Callable[[], Coroutine[Any, Any, List[Any]]]
+    wait_for_messages: typing.Callable[
+        [], typing.Coroutine[typing.Any, typing.Any, typing.List[typing.Any]]
+    ]
 
 
 @pytest_asyncio.fixture
-async def subscribe_to_messages() -> Callable:
+async def subscribe_to_messages(timeout: float = 0.5) -> typing.Callable:
     async def _subscribe_to_messages(
-        generator: AsyncGenerator,
+        generator: typing.AsyncGenerator,
     ) -> AsyncGeneratorSubscriber:
         results = []
-        last_received_time = asyncio.get_event_loop().time()
 
         async def collector() -> None:
-            nonlocal last_received_time
-
+            start_time = time.time()
             while True:
                 try:
                     try:
-                        value = await asyncio.wait_for(generator.asend(None), 1)
+                        elapsed_time = time.time() - start_time
+                        remain_timeout = max(0, timeout - elapsed_time)
+                        value = await asyncio.wait_for(
+                            generator.asend(None), remain_timeout
+                        )
                         results.append(value)
-                        last_received_time = asyncio.get_event_loop().time()
+                        start_time = time.time()
                     except asyncio.TimeoutError:
                         break
                 except StopAsyncIteration:
@@ -35,7 +76,7 @@ async def subscribe_to_messages() -> Callable:
 
         collector_task = asyncio.create_task(collector())
 
-        async def wait_for_messages() -> List[Any]:
+        async def wait_for_messages() -> typing.List[typing.Any]:
             await collector_task
             return results
 
