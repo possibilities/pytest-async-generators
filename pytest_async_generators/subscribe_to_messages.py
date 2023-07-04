@@ -8,7 +8,6 @@ from aiohttp.test_utils import TestServer
 from pytest_async_generators.app import create_app
 from gql import gql, Client
 from gql.transport.websockets import WebsocketsTransport
-from graphql.language.ast import DocumentNode
 
 
 @pytest_asyncio.fixture
