@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "pytest-async-generators"
+version = "0.0.1"
+description = "Pytest fixtures for async generators"
+authors = ["Mike Bannister <notimpossiblemike@gmail.com>"]
+readme = "readme.md"
+packages = [{include = "pytest_async_generators"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pytest-asyncio = "^0.21.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+flake8 = "^6.0.0"
+mypy = "^1.3.0"
+pytest = "^7.4.0"
+pytest-watch = "^4.2.0"
+coverage = "^7.2.7"
+
+[build-system]
+requires = ["poetry-core", "pytest", "setuptools", "wheel"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--verbose --capture=no"
+
+[tool.poetry.plugins."pytest11"]
+"subscribe_to_messages" = "pytest_async_generators.subscribe_to_messages"
+
+
+[tool.mypy]
+disallow_untyped_defs = true
