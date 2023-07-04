@@ -44,40 +44,39 @@ def _get_graphql_query_operation_name(query_string: str) -> str:
     return match.group(2)
 
 
-class SubscriptionMessagesListener:
-    def __init__(self, subscription_coroutine: Coroutine) -> None:
-        self._subscription: asyncio.Task = asyncio.create_task(subscription_coroutine)
+# class SubscriptionMessagesListener:
+#     def __init__(self, subscription_coroutine: Coroutine) -> None:
+#         self._subscription: asyncio.Task = asyncio.create_task(subscription_coroutine)
 
-    async def __aenter__(self: Self) -> Self:
-        await asyncio.sleep(1)
-        return self
+#     async def __aenter__(self: Self) -> Self:
+#         await asyncio.sleep(1)
+#         return self
 
-    async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> Optional[bool]:
-        pass
+#     async def __aexit__(
+#         self,
+#         exc_type: Optional[Type[BaseException]],
+#         exc_val: Optional[BaseException],
+#         exc_tb: Optional[TracebackType],
+#     ) -> Optional[bool]:
+#         pass
 
-    async def wait_for_messages(self: Self) -> List[Dict[str, Any]]:
-        await asyncio.sleep(2)
-        exception = self._subscription.exception()
-        if exception:
-            raise exception
-        messages = self._subscription.result()
-        self._subscription.cancel()
-        return messages
+#     async def wait_for_messages(self: Self) -> List[Dict[str, Any]]:
+#         exception = self._subscription.exception()
+#         if exception:
+#             raise exception
+#         messages = self._subscription.result()
+#         self._subscription.cancel()
+#         return messages
 
 
-@pytest_asyncio.fixture
-async def subscription_messages() -> Callable:
-    def collect_messages(
-        subscription_coroutine: Coroutine,
-    ) -> SubscriptionMessagesListener:
-        return SubscriptionMessagesListener(subscription_coroutine)
+# @pytest_asyncio.fixture
+# async def subscription_messages() -> Callable:
+#     def collect_messages(
+#         subscription_coroutine: Coroutine,
+#     ) -> SubscriptionMessagesListener:
+#         return SubscriptionMessagesListener(subscription_coroutine)
 
-    return collect_messages
+#     return collect_messages
 
 
 @pytest_asyncio.fixture
@@ -172,12 +171,10 @@ async def test_graphql_subscription(
     subscribe_to_messages: Callable, websocket_transport, subscription_client
 ) -> None:
     subscription = subscription_client(
-        "subscription Count { count(target: 10) }",
+        "subscription Count { count(target: 3) }",
     )
 
-    index = 0
-    async for result in subscription:
-        if index > 2:
-            break
-        print(result)
-        index += 1
+    subscribing = await subscribe_to_messages(subscription)
+
+    messages = await subscribing.wait_for_messages()
+    assert messages == [{"count": 0}, {"count": 1}, {"count": 2}]

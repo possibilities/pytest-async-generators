@@ -20,27 +20,14 @@ async def subscribe_to_messages() -> Callable:
         async def collector() -> None:
             nonlocal last_received_time
 
-            value = await generator.asend(None)
-            results.append(value)
-            first_received_elapsed = (
-                asyncio.get_event_loop().time() - last_received_time
-            )
-            last_received_time = asyncio.get_event_loop().time()
-
             while True:
                 try:
                     try:
-                        value = await asyncio.wait_for(
-                            generator.asend(None), first_received_elapsed * 1.25
-                        )
+                        value = await asyncio.wait_for(generator.asend(None), 1)
                         results.append(value)
                         last_received_time = asyncio.get_event_loop().time()
                     except asyncio.TimeoutError:
-                        if (
-                            asyncio.get_event_loop().time() - last_received_time
-                            > first_received_elapsed
-                        ):
-                            break
+                        break
                 except StopAsyncIteration:
                     break
                 except asyncio.CancelledError:
