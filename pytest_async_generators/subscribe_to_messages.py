@@ -1,43 +1,8 @@
 import time
 import asyncio
-import pytest
+import typing
 import pytest_asyncio
 from dataclasses import dataclass
-import typing
-from aiohttp.test_utils import TestServer
-from pytest_async_generators.app import create_app
-from gql import gql, Client
-from gql.transport.websockets import WebsocketsTransport
-
-
-@pytest_asyncio.fixture
-async def server(
-    aiohttp_server: typing.Callable[..., typing.Awaitable[TestServer]],
-) -> TestServer:
-    return await aiohttp_server(create_app())
-
-
-@pytest_asyncio.fixture
-async def websocket_transport(
-    server: TestServer,
-) -> typing.AsyncGenerator[WebsocketsTransport, None]:
-    transport = WebsocketsTransport(
-        url=f"ws://localhost:{server.port}/graphql", close_timeout=0.1
-    )
-    yield transport
-    await transport.close()
-
-
-@pytest.fixture
-def subscription_client(websocket_transport: WebsocketsTransport) -> typing.Callable:
-    def _subscription_client(query_string: str) -> typing.AsyncGenerator:
-        query = gql(query_string)
-        client = Client(
-            transport=websocket_transport, fetch_schema_from_transport=False
-        )
-        return client.subscribe_async(query)
-
-    return _subscription_client
 
 
 @dataclass
