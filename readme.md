@@ -24,4 +24,4 @@ async def test_counting(subscribe_to_messages: Callable) -> None:
     assert messages == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
 
-Subscribe to messages can be passed a `timeout` parameter to control how long to wait for new messages.
+`subscribe_to_messages()` can be passed a `timeout` parameter to control how long to wait for new messages.
