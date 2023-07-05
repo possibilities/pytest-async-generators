@@ -44,6 +44,8 @@ async def subscribe_to_messages(timeout: float = 0.5) -> typing.Callable:
             await collector_task
             return results
 
+        print(999999)
+        await asyncio.sleep(timeout)
         return AsyncGeneratorSubscriber(wait_for_messages=wait_for_messages)
 
     return _subscribe_to_messages
