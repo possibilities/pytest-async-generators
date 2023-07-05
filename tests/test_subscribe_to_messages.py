@@ -7,7 +7,7 @@ from typing import AsyncGenerator, Callable
 async def test_counting(subscribe_to_messages: Callable) -> None:
     async def count() -> AsyncGenerator[int, None]:
         for n in range(10):
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.2)
             yield n
 
     subscription = await subscribe_to_messages(count())
